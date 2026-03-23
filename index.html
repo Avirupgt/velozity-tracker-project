@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velozity — Project Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #22222f;
+    --border: #2a2a3a;
+    --border2: #383850;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --text3: #5a5a70;
+    --accent: #6c63ff;
+    --accent2: #8b5cf6;
+    --accent-glow: rgba(108,99,255,0.15);
+    --red: #ff4d6d;
+    --orange: #ff8c42;
+    --yellow: #ffd166;
+    --green: #06d6a0;
+    --blue: #4cc9f0;
+    --critical: #ff4d6d;
+    --high: #ff8c42;
+    --medium: #ffd166;
+    --low: #06d6a0;
+    --radius: 8px;
+    --radius-lg: 14px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Instrument Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+    --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* ── HEADER ── */
+  #header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 20px;
+    height: 56px;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #6c63ff, #4cc9f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+  }
+
+  .logo span {
+    font-weight: 400;
+    opacity: 0.6;
+    -webkit-text-fill-color: var(--text2);
+    background: none;
+  }
+
+  .presence-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .presence-avatars {
+    display: flex; align-items: center;
+  }
+
+  .presence-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600;
+    font-family: var(--mono);
+    margin-left: -8px;
+    transition: transform var(--transition);
+    cursor: default;
+  }
+
+  .presence-avatar:first-child { margin-left: 0; }
+  .presence-avatar:hover { transform: translateY(-2px); z-index: 1; }
+
+  .view-switcher {
+    display: flex; gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3px;
+  }
+
+  .view-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .view-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .view-btn:hover:not(.active) {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* ── FILTER BAR ── */
+  #filter-bar {
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .filter-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .filter-label-spacer {
+    margin-left: 8px;
+  }
+
+  .filter-arrow {
+    color: var(--text3);
+    font-size: 11px;
+  }
+
+  .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .filter-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 12px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+  .filter-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+  .filter-date {
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .filter-date:focus { border-color: var(--accent); }
+
+  .filter-date::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
+  }
+
+  .clear-filters-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--red);
+    background: transparent;
+    color: var(--red);
+    font-size: 12px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: none;
+  }
+
+  .clear-filters-btn.visible { display: inline-flex; align-items: center; gap: 5px; }
+  .clear-filters-btn:hover { background: rgba(255,77,109,0.1); }
+
+  /* ── MAIN CONTENT ── */
+  #main { flex: 1; }
+
+  /* ── KANBAN VIEW ── */
+  #kanban-view {
+    display: flex; gap: 16px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    height: calc(100vh - 56px - 57px);
+    align-items: flex-start;
+  }
+
+  .kanban-col {
+    flex: 0 0 300px;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    max-height: 100%;
+    overflow: hidden;
+    transition: background var(--transition);
+  }
+
+  .kanban-col.drag-over {
+    background: var(--surface2);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), inset 0 0 30px var(--accent-glow);
+  }
+
+  .col-header {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: inherit;
+    z-index: 1;
+  }
+
+  .col-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .col-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .col-count {
+    margin-left: auto;
+    background: var(--surface3);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .col-cards {
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 100px;
+  }
+
+  .col-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text3);
+  }
+
+  .col-empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.4;
+  }
+
+  .col-empty p {
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  /* ── TASK CARD ── */
+  .task-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    cursor: grab;
+    transition: all var(--transition);
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .task-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  .task-card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  .card-placeholder {
+    border: 2px dashed var(--accent);
+    border-radius: var(--radius);
+    background: var(--accent-glow);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 8px; margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .priority-badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .priority-critical { background: rgba(255,77,109,0.15); color: var(--critical); border: 1px solid rgba(255,77,109,0.3); }
+  .priority-high { background: rgba(255,140,66,0.15); color: var(--high); border: 1px solid rgba(255,140,66,0.3); }
+  .priority-medium { background: rgba(255,209,102,0.15); color: var(--yellow); border: 1px solid rgba(255,209,102,0.3); }
+  .priority-low { background: rgba(6,214,160,0.15); color: var(--low); border: 1px solid rgba(6,214,160,0.3); }
+
+  .card-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-due {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .card-due.overdue { color: var(--red); }
+  .card-due.due-today { color: var(--yellow); font-weight: 500; }
+  .card-due.overdue-many { color: var(--red); font-weight: 500; }
+
+  .card-assignees {
+    display: flex;
+  }
+
+  .assignee-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+    font-family: var(--mono);
+    margin-left: -6px;
+    flex-shrink: 0;
+  }
+
+  .assignee-avatar:first-child { margin-left: 0; }
+
+  .collab-indicators {
+    position: absolute;
+    top: -6px; right: -6px;
+    display: flex;
+  }
+
+  .collab-dot {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+    font-family: var(--mono);
+    margin-left: -6px;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .collab-dot:first-child { margin-left: 0; }
+
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .collab-overflow {
+    background: var(--surface3);
+    color: var(--text2);
+    font-size: 8px;
+  }
+
+  /* ── LIST VIEW ── */
+  #list-view {
+    padding: 20px 24px;
+  }
+
+  .list-header {
+    display: grid;
+    grid-template-columns: 1fr 120px 100px 110px 140px;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0 16px;
+  }
+
+  .list-col-header {
+    padding: 10px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: color var(--transition);
+    -webkit-user-select: none;
+    user-select: none;
+    border-right: 1px solid var(--border);
+  }
+
+  .list-col-header:last-child { border-right: none; }
+  .list-col-header:hover { color: var(--text); }
+  .list-col-header.sorted { color: var(--accent); }
+
+  .sort-indicator {
+    font-size: 10px;
+    opacity: 0.7;
+  }
+
+  .list-scroller {
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    height: calc(100vh - 56px - 57px - 44px - 40px);
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .list-virtual-inner {
+    position: relative;
+  }
+
+  .list-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 100px 110px 140px;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    position: absolute;
+    width: 100%;
+    background: var(--surface);
+    transition: background var(--transition);
+  }
+
+  .list-row:hover { background: var(--surface2); }
+
+  .list-cell {
+    padding: 10px 8px;
+    font-size: 13px;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .list-cell:last-child { border-right: none; }
+
+  .status-select {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+  }
+
+  .status-select:focus { border-color: var(--accent); }
+
+  .list-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px;
+    height: 200px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .list-empty-icon { font-size: 40px; opacity: 0.3; }
+
+  .empty-clear-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .empty-clear-btn:hover { background: var(--accent-glow); }
+
+  /* ── TIMELINE VIEW ── */
+  #timeline-view {
+    padding: 20px 24px;
+  }
+
+  .timeline-container {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .timeline-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface);
+  }
+
+  .timeline-label-col {
+    flex: 0 0 200px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-right: 1px solid var(--border);
+  }
+
+  .timeline-days-header {
+    flex: 1;
+    overflow-x: hidden;
+    display: flex;
+  }
+
+  .timeline-body {
+    overflow-x: auto;
+    max-height: calc(100vh - 56px - 57px - 100px);
+  }
+
+  .timeline-row {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    height: 44px;
+    align-items: center;
+  }
+
+  .timeline-row:last-child { border-bottom: none; }
+
+  .timeline-task-label {
+    flex: 0 0 200px;
+    padding: 0 14px;
+    font-size: 12px;
+    color: var(--text2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+    height: 100%;
+    display: flex; align-items: center;
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+
+  .timeline-grid {
+    flex: 1;
+    position: relative;
+    min-width: max-content;
+  }
+
+  .timeline-day-col {
+    display: inline-block;
+    width: 30px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    padding: 10px 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .timeline-day-col.today-col { color: var(--accent); font-weight: 600; }
+
+  .timeline-bar {
+    position: absolute;
+    height: 22px;
+    border-radius: 4px;
+    top: 11px;
+    cursor: default;
+    transition: opacity var(--transition);
+    display: flex; align-items: center; padding: 0 6px;
+    font-size: 10px;
+    font-family: var(--mono);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+    min-width: 6px;
+  }
+
+  .timeline-bar:hover { opacity: 0.85; }
+  .timeline-today-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .timeline-today-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    background: var(--surface);
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  /* ── DRAG GHOST ── */
+  #drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    transform: rotate(2deg);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    border-radius: var(--radius);
+    display: none;
+    max-width: 280px;
+  }
+
+  /* ── SNAP-BACK ANIMATION ── */
+  @keyframes snapBack {
+    from { transform: translate(var(--snap-x), var(--snap-y)) rotate(2deg); opacity: 0.7; }
+    to { transform: translate(0,0) rotate(0deg); opacity: 1; }
+  }
+
+  .snap-back { animation: snapBack 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+  /* ── UTILITY ── */
+  .hidden { display: none !important; }
+
+  .view-container { display: none; }
+  .view-container.active { display: block; }
+  #kanban-view.active { display: flex; }
+
+  /* color utilities */
+  .u-todo { color: var(--text3); }
+  .u-inprogress { color: var(--blue); }
+  .u-inreview { color: var(--yellow); }
+  .u-done { color: var(--green); }
+
+  .dot-todo { background: var(--text3); }
+  .dot-inprogress { background: var(--blue); }
+  .dot-inreview { background: var(--yellow); }
+  .dot-done { background: var(--green); }
+
+  /* ── ROW COUNT INDICATOR ── */
+  .row-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    padding: 8px 0;
+  }
+
+  /* NOTIFICATION TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 13px;
+    z-index: 9000;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: var(--shadow);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s ease;
+  }
+
+  #toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Drag Ghost -->
+<div id="drag-ghost"></div>
+
+<!-- Toast -->
+<div id="toast">✓ Status updated</div>
+
+<!-- Header -->
+<div id="header">
+  <div class="logo">Velozity <span>/ tracker</span></div>
+
+  <div class="view-switcher">
+    <button class="view-btn active" data-view="kanban" onclick="switchView('kanban')">
+      ▦ Board
+    </button>
+    <button class="view-btn" data-view="list" onclick="switchView('list')">
+      ≡ List
+    </button>
+    <button class="view-btn" data-view="timeline" onclick="switchView('timeline')">
+      ⬤ Timeline
+    </button>
+  </div>
+
+  <div class="presence-bar">
+    <div class="presence-avatars" id="presence-avatars"></div>
+    <span id="presence-count"></span>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div id="filter-bar">
+  <span class="filter-label">Status</span>
+  <div class="filter-group" id="filter-status">
+    <button class="filter-chip" data-val="todo" onclick="toggleFilter('status','todo')">To Do</button>
+    <button class="filter-chip" data-val="inprogress" onclick="toggleFilter('status','inprogress')">In Progress</button>
+    <button class="filter-chip" data-val="inreview" onclick="toggleFilter('status','inreview')">In Review</button>
+    <button class="filter-chip" data-val="done" onclick="toggleFilter('status','done')">Done</button>
+  </div>
+
+  <span class="filter-label filter-label-spacer">Priority</span>
+  <div class="filter-group" id="filter-priority">
+    <button class="filter-chip" data-val="critical" onclick="toggleFilter('priority','critical')">Critical</button>
+    <button class="filter-chip" data-val="high" onclick="toggleFilter('priority','high')">High</button>
+    <button class="filter-chip" data-val="medium" onclick="toggleFilter('priority','medium')">Medium</button>
+    <button class="filter-chip" data-val="low" onclick="toggleFilter('priority','low')">Low</button>
+  </div>
+
+  <span class="filter-label filter-label-spacer">Assignee</span>
+  <div class="filter-group" id="filter-assignee"></div>
+
+  <span class="filter-label filter-label-spacer">Due</span>
+  <input type="date" class="filter-date" id="filter-from" onchange="applyFilters()" title="From">
+  <span class="filter-arrow">→</span>
+  <input type="date" class="filter-date" id="filter-to" onchange="applyFilters()" title="To">
+
+  <button class="clear-filters-btn" id="clear-btn" onclick="clearFilters()">✕ Clear all</button>
+</div>
+
+<!-- Views -->
+<div id="kanban-view" class="view-container active"></div>
+<div id="list-view" class="view-container"></div>
+<div id="timeline-view" class="view-container"></div>
+
+<script>
+// ════════════════════════════════════════════
+// DATA GENERATOR (500+ tasks)
+// ════════════════════════════════════════════
+const USERS = [
+  { id:'u1', name:'Alex Rivera', initials:'AR', color:'#6c63ff' },
+  { id:'u2', name:'Sam Chen',   initials:'SC', color:'#4cc9f0' },
+  { id:'u3', name:'Maya Patel', initials:'MP', color:'#06d6a0' },
+  { id:'u4', name:'Jordan Kim', initials:'JK', color:'#ff8c42' },
+  { id:'u5', name:'Casey Bell', initials:'CB', color:'#ff4d6d' },
+  { id:'u6', name:'Riley Moss', initials:'RM', color:'#ffd166' },
+];
+
+const STATUSES = ['todo','inprogress','inreview','done'];
+const PRIORITIES = ['critical','high','medium','low'];
+
+const TITLE_PARTS = [
+  ['Implement','Refactor','Design','Optimize','Fix','Review','Deploy','Update','Create','Migrate'],
+  ['authentication','dashboard','API endpoint','data model','UI components','test suite','caching layer','search index','notification system','payment flow'],
+  ['for mobile','in staging','with TypeScript','using React','per spec','for v2','with dark mode','for accessibility','with animations','from scratch'],
+];
+
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function generateTasks(count = 520) {
+  const tasks = [];
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth();
+
+  for (let i = 0; i < count; i++) {
+    const dueOffset = randInt(-20, 40); // some overdue
+    const dueDate = new Date(now);
+    dueDate.setDate(dueDate.getDate() + dueOffset);
+
+    const hasStart = Math.random() > 0.15; // ~15% no start date
+    let startDate = null;
+    if (hasStart) {
+      startDate = new Date(dueDate);
+      startDate.setDate(startDate.getDate() - randInt(2, 14));
+    }
+
+    tasks.push({
+      id: `task-${i+1}`,
+      title: `${randFrom(TITLE_PARTS[0])} ${randFrom(TITLE_PARTS[1])} ${randFrom(TITLE_PARTS[2])}`,
+      status: randFrom(STATUSES),
+      priority: randFrom(PRIORITIES),
+      assigneeId: randFrom(USERS).id,
+      dueDate: dueDate.toISOString().split('T')[0],
+      startDate: startDate ? startDate.toISOString().split('T')[0] : null,
+    });
+  }
+  return tasks;
+}
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let allTasks = generateTasks(520);
+let filteredTasks = [...allTasks];
+let currentView = 'kanban';
+
+let filters = {
+  status: new Set(),
+  priority: new Set(),
+  assignee: new Set(),
+  from: '',
+  to: '',
+};
+
+// List sort state
+let sortCol = null;
+let sortDir = 1; // 1=asc, -1=desc
+
+// ── URL STATE (sandbox-safe: history/location are blocked in iframes) ──
+const canUseHistory = (() => {
+  try { history.replaceState(null, '', location.href); return true; }
+  catch(e) { return false; }
+})();
+
+function readURLFilters() {
+  try {
+    const p = new URLSearchParams(location.search);
+    filters.status  = new Set((p.get('status')||'').split(',').filter(Boolean));
+    filters.priority= new Set((p.get('priority')||'').split(',').filter(Boolean));
+    filters.assignee= new Set((p.get('assignee')||'').split(',').filter(Boolean));
+    filters.from    = p.get('from')||'';
+    filters.to      = p.get('to')||'';
+    const v = p.get('view');
+    if (v && ['kanban','list','timeline'].includes(v)) currentView = v;
+  } catch(e) { /* sandboxed — skip */ }
+}
+
+function writeURLFilters() {
+  if (!canUseHistory) return; // gracefully skip in sandboxed iframes
+  try {
+    const p = new URLSearchParams();
+    if (filters.status.size)   p.set('status',   [...filters.status].join(','));
+    if (filters.priority.size) p.set('priority', [...filters.priority].join(','));
+    if (filters.assignee.size) p.set('assignee', [...filters.assignee].join(','));
+    if (filters.from) p.set('from', filters.from);
+    if (filters.to)   p.set('to',   filters.to);
+    p.set('view', currentView);
+    history.replaceState(null, '', '?' + p.toString());
+  } catch(e) { /* sandboxed — skip */ }
+}
+
+// ════════════════════════════════════════════
+// FILTER LOGIC
+// ════════════════════════════════════════════
+function toggleFilter(type, val) {
+  if (filters[type].has(val)) filters[type].delete(val);
+  else filters[type].add(val);
+  applyFilters();
+}
+
+function applyFilters() {
+  filters.from = document.getElementById('filter-from').value;
+  filters.to   = document.getElementById('filter-to').value;
+  syncFilterUI();
+  filteredTasks = allTasks.filter(t => {
+    if (filters.status.size   && !filters.status.has(t.status))     return false;
+    if (filters.priority.size && !filters.priority.has(t.priority)) return false;
+    if (filters.assignee.size && !filters.assignee.has(t.assigneeId)) return false;
+    if (filters.from && t.dueDate < filters.from) return false;
+    if (filters.to   && t.dueDate > filters.to)   return false;
+    return true;
+  });
+  writeURLFilters();
+  renderCurrentView();
+}
+
+function syncFilterUI() {
+  // Status chips
+  document.querySelectorAll('#filter-status .filter-chip').forEach(btn => {
+    btn.classList.toggle('active', filters.status.has(btn.dataset.val));
+  });
+  document.querySelectorAll('#filter-priority .filter-chip').forEach(btn => {
+    btn.classList.toggle('active', filters.priority.has(btn.dataset.val));
+  });
+  document.querySelectorAll('#filter-assignee .filter-chip').forEach(btn => {
+    btn.classList.toggle('active', filters.assignee.has(btn.dataset.val));
+  });
+  document.getElementById('filter-from').value = filters.from;
+  document.getElementById('filter-to').value   = filters.to;
+
+  const hasAny = filters.status.size || filters.priority.size || filters.assignee.size || filters.from || filters.to;
+  document.getElementById('clear-btn').classList.toggle('visible', !!hasAny);
+}
+
+function clearFilters() {
+  filters = { status: new Set(), priority: new Set(), assignee: new Set(), from:'', to:'' };
+  applyFilters();
+}
+
+// Build assignee filter chips
+function buildAssigneeChips() {
+  const el = document.getElementById('filter-assignee');
+  el.innerHTML = USERS.map(u =>
+    `<button class="filter-chip" data-val="${u.id}" onclick="toggleFilter('assignee','${u.id}')">${u.initials}</button>`
+  ).join('');
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function getUser(id) { return USERS.find(u => u.id === id) || USERS[0]; }
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function dueLabelAndClass(dueDate) {
+  const todayStr = today();
+  if (!dueDate) return { label:'No due date', cls:'' };
+  if (dueDate === todayStr) return { label:'Due Today', cls:'due-today' };
+  const diff = Math.floor((new Date(todayStr) - new Date(dueDate)) / 86400000);
+  if (diff > 7) return { label:`${diff}d overdue`, cls:'overdue-many' };
+  if (diff > 0) return { label:new Date(dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}), cls:'overdue' };
+  return { label: new Date(dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}), cls:'' };
+}
+
+function priorityColor(p) {
+  return { critical: '#ff4d6d', high: '#ff8c42', medium: '#ffd166', low: '#06d6a0' }[p] || '#888';
+}
+
+// ════════════════════════════════════════════
+// VIEW SWITCHER
+// ════════════════════════════════════════════
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+  document.getElementById(`${view}-view`).classList.add('active');
+  document.querySelectorAll('.view-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+  writeURLFilters();
+  renderCurrentView();
+}
+
+function renderCurrentView() {
+  if (currentView === 'kanban') renderKanban();
+  else if (currentView === 'list') renderList();
+  else renderTimeline();
+}
+
+// ════════════════════════════════════════════
+// KANBAN VIEW
+// ════════════════════════════════════════════
+const COLUMNS = [
+  { id:'todo',      label:'To Do',       dotClass:'dot-todo' },
+  { id:'inprogress',label:'In Progress', dotClass:'dot-inprogress' },
+  { id:'inreview',  label:'In Review',   dotClass:'dot-inreview' },
+  { id:'done',      label:'Done',        dotClass:'dot-done' },
+];
+
+function renderKanban() {
+  const container = document.getElementById('kanban-view');
+  container.innerHTML = '';
+
+  COLUMNS.forEach(col => {
+    const tasks = filteredTasks.filter(t => t.status === col.id);
+    const colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    colEl.dataset.col = col.id;
+
+    colEl.innerHTML = `
+      <div class="col-header">
+        <div class="col-dot ${col.dotClass}"></div>
+        <div class="col-title">${col.label}</div>
+        <div class="col-count">${tasks.length}</div>
+      </div>
+      <div class="col-cards" data-col="${col.id}">
+        ${tasks.length === 0 ? `
+          <div class="col-empty">
+            <div class="col-empty-icon">◻</div>
+            <p>No tasks here</p>
+          </div>
+        ` : tasks.map(t => buildCardHTML(t)).join('')}
+      </div>
+    `;
+    container.appendChild(colEl);
+    setupDropZone(colEl.querySelector('.col-cards'));
+  });
+
+  setupDragOnCards();
+}
+
+function buildCardHTML(task) {
+  const user = getUser(task.assigneeId);
+  const { label, cls } = dueLabelAndClass(task.dueDate);
+  const collabs = collabState.filter(c => c.taskId === task.id);
+
+  let collabHTML = '';
+  if (collabs.length > 0) {
+    const show = collabs.slice(0, 2);
+    const overflow = collabs.length - 2;
+    collabHTML = `<div class="collab-indicators">
+      ${show.map(c => `<div class="collab-dot" style="background:${c.color}" title="${c.name}">${c.initials}</div>`).join('')}
+      ${overflow > 0 ? `<div class="collab-dot collab-overflow">+${overflow}</div>` : ''}
+    </div>`;
+  }
+
+  return `<div class="task-card" data-id="${task.id}" draggable="true">
+    ${collabHTML}
+    <div class="card-header">
+      <div class="card-title">${task.title}</div>
+      <div class="priority-badge priority-${task.priority}">${task.priority}</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-due ${cls}">${label}</div>
+      <div class="card-assignees">
+        <div class="assignee-avatar" style="background:${user.color}20;color:${user.color};border-color:${user.color}40">
+          ${user.initials}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// DRAG AND DROP (CUSTOM, NO LIBRARIES)
+// ════════════════════════════════════════════
+let dragState = {
+  active: false,
+  taskId: null,
+  sourceCol: null,
+  originEl: null,
+  ghostEl: null,
+  placeholder: null,
+  startX: 0, startY: 0,
+  offsetX: 0, offsetY: 0,
+};
+
+function setupDragOnCards() {
+  document.querySelectorAll('.task-card').forEach(card => {
+    card.addEventListener('mousedown', startDrag);
+    card.addEventListener('touchstart', startDragTouch, { passive: false });
+  });
+}
+
+function startDrag(e) {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  initDrag(e.currentTarget, e.clientX, e.clientY);
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup', onDragEnd);
+}
+
+function startDragTouch(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  initDrag(e.currentTarget, touch.clientX, touch.clientY);
+  document.addEventListener('touchmove', onDragMoveTouch, { passive: false });
+  document.addEventListener('touchend', onDragEndTouch);
+}
+
+function initDrag(cardEl, clientX, clientY) {
+  const rect = cardEl.getBoundingClientRect();
+  const taskId = cardEl.dataset.id;
+  const colCards = cardEl.closest('.col-cards');
+  const sourceCol = colCards.dataset.col;
+
+  // Create placeholder
+  const ph = document.createElement('div');
+  ph.className = 'card-placeholder';
+  ph.style.height = rect.height + 'px';
+  cardEl.parentNode.insertBefore(ph, cardEl);
+
+  // Style original
+  cardEl.classList.add('dragging');
+
+  // Set up ghost
+  const ghost = document.getElementById('drag-ghost');
+  ghost.innerHTML = cardEl.outerHTML;
+  ghost.style.display = 'block';
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left = rect.left + 'px';
+  ghost.style.top  = rect.top  + 'px';
+
+  dragState = {
+    active: true,
+    taskId,
+    sourceCol,
+    originEl: cardEl,
+    ghostEl: ghost,
+    placeholder: ph,
+    offsetX: clientX - rect.left,
+    offsetY: clientY - rect.top,
+    currentDropCol: null,
+  };
+}
+
+function onDragMove(e) { moveGhost(e.clientX, e.clientY); }
+function onDragMoveTouch(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  moveGhost(t.clientX, t.clientY);
+}
+
+function moveGhost(cx, cy) {
+  if (!dragState.active) return;
+  const g = dragState.ghostEl;
+  g.style.left = (cx - dragState.offsetX) + 'px';
+  g.style.top  = (cy - dragState.offsetY) + 'px';
+
+  // Hit-test drop zones
+  g.style.display = 'none';
+  const el = document.elementFromPoint(cx, cy);
+  g.style.display = 'block';
+
+  const dropZone = el && el.closest('.col-cards');
+  document.querySelectorAll('.col-cards').forEach(dz => dz.classList.remove('drag-over'));
+  document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+
+  if (dropZone) {
+    dropZone.classList.add('drag-over');
+    dropZone.closest('.kanban-col').classList.add('drag-over');
+    dragState.currentDropCol = dropZone.dataset.col;
+
+    // Move placeholder to show insertion point
+    const cards = [...dropZone.children].filter(c => !c.classList.contains('card-placeholder') && !c.classList.contains('col-empty'));
+    let inserted = false;
+    for (const card of cards) {
+      const r = card.getBoundingClientRect();
+      if (cy < r.top + r.height / 2) {
+        dropZone.insertBefore(dragState.placeholder, card);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted) dropZone.appendChild(dragState.placeholder);
+  } else {
+    dragState.currentDropCol = null;
+  }
+}
+
+function onDragEnd(e) {
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+  finishDrag(e.clientX, e.clientY);
+}
+
+function onDragEndTouch(e) {
+  document.removeEventListener('touchmove', onDragMoveTouch);
+  document.removeEventListener('touchend', onDragEndTouch);
+  const t = e.changedTouches[0];
+  finishDrag(t.clientX, t.clientY);
+}
+
+function finishDrag(cx, cy) {
+  if (!dragState.active) return;
+  const { taskId, sourceCol, currentDropCol, originEl, ghostEl, placeholder } = dragState;
+  dragState.active = false;
+
+  document.querySelectorAll('.col-cards').forEach(dz => dz.classList.remove('drag-over'));
+  document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+
+  ghostEl.style.display = 'none';
+  originEl.classList.remove('dragging');
+  if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+
+  if (currentDropCol && currentDropCol !== sourceCol) {
+    // Update task status
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) task.status = currentDropCol;
+    // Also update in filteredTasks
+    const ft = filteredTasks.find(t => t.id === taskId);
+    if (ft) ft.status = currentDropCol;
+    showToast(`Moved to ${COLUMNS.find(c=>c.id===currentDropCol)?.label}`);
+  } else if (!currentDropCol) {
+    // Snap back — card stays in source, nothing changes
+  }
+
+  renderKanban();
+}
+
+function setupDropZone(el) {
+  // Drop zones handled via mouse/touch move hit-testing above
+}
+
+// ════════════════════════════════════════════
+// LIST VIEW with VIRTUAL SCROLLING
+// ════════════════════════════════════════════
+const ROW_HEIGHT = 44;
+const BUFFER = 5;
+let listScrollTop = 0;
+let virtualData = [];
+
+function renderList() {
+  const container = document.getElementById('list-view');
+  // Apply sort
+  virtualData = sortTasks([...filteredTasks]);
+
+  container.innerHTML = `
+    <div class="row-count" style="margin-bottom:8px">
+      Showing <strong>${virtualData.length}</strong> of <strong>${allTasks.length}</strong> tasks
+    </div>
+    <div class="list-header">
+      ${buildListHeader('title','Task')}
+      ${buildListHeader('assigneeId','Assignee')}
+      ${buildListHeader('priority','Priority')}
+      ${buildListHeader('status','Status')}
+      ${buildListHeader('dueDate','Due Date')}
+    </div>
+    <div class="list-scroller" id="list-scroller">
+      ${virtualData.length === 0 ? `
+        <div class="list-empty">
+          <div class="list-empty-icon">⊘</div>
+          <div>No tasks match your filters</div>
+          <button class="empty-clear-btn" onclick="clearFilters()">Clear filters</button>
+        </div>
+      ` : `<div class="list-virtual-inner" id="list-inner" style="height:${virtualData.length * ROW_HEIGHT}px"></div>`}
+    </div>
+  `;
+
+  if (virtualData.length > 0) {
+    const scroller = document.getElementById('list-scroller');
+    scroller.addEventListener('scroll', onListScroll);
+    renderVisibleRows(0);
+  }
+}
+
+function buildListHeader(col, label) {
+  const active = sortCol === col;
+  const arrow = active ? (sortDir === 1 ? '↑' : '↓') : '↕';
+  return `<div class="list-col-header ${active ? 'sorted' : ''}" onclick="setSort('${col}')">
+    ${label} <span class="sort-indicator">${arrow}</span>
+  </div>`;
+}
+
+function onListScroll(e) {
+  listScrollTop = e.target.scrollTop;
+  renderVisibleRows(listScrollTop);
+}
+
+function renderVisibleRows(scrollTop) {
+  const scroller = document.getElementById('list-scroller');
+  if (!scroller) return;
+  const viewportH = scroller.clientHeight || 500;
+  const startIdx = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+  const endIdx = Math.min(virtualData.length - 1, Math.ceil((scrollTop + viewportH) / ROW_HEIGHT) + BUFFER);
+
+  const inner = document.getElementById('list-inner');
+  if (!inner) return;
+
+  // Remove rows outside range
+  inner.querySelectorAll('.list-row').forEach(row => {
+    const idx = parseInt(row.dataset.idx);
+    if (idx < startIdx || idx > endIdx) row.remove();
+  });
+
+  // Add missing rows
+  const existing = new Set([...inner.querySelectorAll('.list-row')].map(r => parseInt(r.dataset.idx)));
+  for (let i = startIdx; i <= endIdx; i++) {
+    if (existing.has(i)) continue;
+    const task = virtualData[i];
+    const row = buildListRow(task, i);
+    inner.appendChild(row);
+  }
+}
+
+function buildListRow(task, idx) {
+  const row = document.createElement('div');
+  row.className = 'list-row';
+  row.dataset.idx = idx;
+  row.style.top = (idx * ROW_HEIGHT) + 'px';
+  row.style.height = ROW_HEIGHT + 'px';
+
+  const user = getUser(task.assigneeId);
+  const { label, cls } = dueLabelAndClass(task.dueDate);
+
+  row.innerHTML = `
+    <div class="list-cell" title="${task.title}">${task.title}</div>
+    <div class="list-cell">
+      <span style="display:inline-flex;align-items:center;gap:5px">
+        <span class="assignee-avatar" style="background:${user.color}20;color:${user.color};border-color:${user.color}40;width:20px;height:20px;font-size:8px">${user.initials}</span>
+        ${user.name.split(' ')[0]}
+      </span>
+    </div>
+    <div class="list-cell">
+      <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+    </div>
+    <div class="list-cell">
+      <select class="status-select" onchange="updateStatus('${task.id}',this.value)">
+        ${STATUSES.map(s => `<option value="${s}" ${s===task.status?'selected':''}>${{todo:'To Do',inprogress:'In Progress',inreview:'In Review',done:'Done'}[s]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="list-cell card-due ${cls}" style="font-family:var(--mono);font-size:12px">${label}</div>
+  `;
+  return row;
+}
+
+function setSort(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  renderList();
+}
+
+function sortTasks(tasks) {
+  if (!sortCol) return tasks;
+  const PRIORITY_ORDER = { critical:0, high:1, medium:2, low:3 };
+  return [...tasks].sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'priority') { va = PRIORITY_ORDER[va]; vb = PRIORITY_ORDER[vb]; }
+    if (sortCol === 'assigneeId') { va = getUser(va).name; vb = getUser(vb).name; }
+    if (va < vb) return -sortDir;
+    if (va > vb) return  sortDir;
+    return 0;
+  });
+}
+
+function updateStatus(taskId, newStatus) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (task) task.status = newStatus;
+  const ft = filteredTasks.find(t => t.id === taskId);
+  if (ft) ft.status = newStatus;
+  showToast(`Status updated`);
+  // Re-render to keep virtual scroll consistent if filter is active
+  if (filters.status.size) applyFilters();
+}
+
+// ════════════════════════════════════════════
+// TIMELINE VIEW
+// ════════════════════════════════════════════
+function renderTimeline() {
+  const container = document.getElementById('timeline-view');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayDay = now.getDate();
+
+  const DAY_W = 30;
+  const totalW = daysInMonth * DAY_W;
+
+  // Days header
+  let daysHeaderHTML = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === todayDay;
+    daysHeaderHTML += `<div class="timeline-day-col ${isToday ? 'today-col' : ''}">${d}</div>`;
+  }
+
+  const todayX = (todayDay - 1) * DAY_W;
+
+  // Show only first 50 filtered tasks in timeline (performance)
+  const timelineTasks = filteredTasks.slice(0, 80);
+
+  const rowsHTML = timelineTasks.map(task => {
+    const due = task.dueDate ? new Date(task.dueDate) : null;
+    const start = task.startDate ? new Date(task.startDate) : null;
+
+    // Only show tasks with due date in current month
+    if (!due) return '';
+    const dueM = due.getMonth(), dueY = due.getFullYear();
+
+    let startDay, endDay;
+    if (start && start.getMonth() === month && start.getFullYear() === year) {
+      startDay = start.getDate();
+    } else if (start && (start < new Date(year, month, 1))) {
+      startDay = 1;
+    } else {
+      startDay = due.getDate();
+    }
+
+    if (dueM === month && dueY === year) {
+      endDay = due.getDate();
+    } else if (due > new Date(year, month+1, 0)) {
+      endDay = daysInMonth;
+    } else {
+      return '';
+    }
+
+    const x = (startDay - 1) * DAY_W;
+    const w = Math.max(6, (endDay - startDay + 1) * DAY_W - 2);
+    const color = priorityColor(task.priority);
+
+    return `<div class="timeline-row">
+      <div class="timeline-task-label" title="${task.title}">${task.title}</div>
+      <div class="timeline-grid" style="width:${totalW}px;position:relative;height:44px">
+        <div class="timeline-bar" style="left:${x}px;width:${w}px;background:${color}cc;" title="${task.title}">
+          ${w > 40 ? task.title.substring(0,15)+'…' : ''}
+        </div>
+        <div class="timeline-today-line" style="left:${todayX + 15}px"></div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  container.innerHTML = `
+    <div class="timeline-container">
+      <div class="timeline-header">
+        <div class="timeline-label-col">
+          ${now.toLocaleDateString('en-US',{month:'long',year:'numeric'})}
+        </div>
+        <div class="timeline-days-header" style="overflow-x:hidden">
+          ${daysHeaderHTML}
+        </div>
+      </div>
+      <div class="timeline-body">
+        ${timelineTasks.length === 0 ? `
+          <div class="list-empty">
+            <div class="list-empty-icon">📅</div>
+            <div>No tasks in current month</div>
+          </div>
+        ` : rowsHTML}
+      </div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════
+// LIVE COLLABORATION SIMULATION
+// ════════════════════════════════════════════
+const SIM_USERS = [
+  { id:'s1', name:'Alex Rivera', initials:'AR', color:'#6c63ff' },
+  { id:'s2', name:'Maya Patel',  initials:'MP', color:'#06d6a0' },
+  { id:'s3', name:'Jordan Kim',  initials:'JK', color:'#ff8c42' },
+  { id:'s4', name:'Casey Bell',  initials:'CB', color:'#ff4d6d' },
+];
+
+let collabState = []; // [{ userId, taskId, name, initials, color }]
+
+function initCollab() {
+  // Assign each sim user to a random task
+  collabState = SIM_USERS.map(u => ({
+    ...u,
+    taskId: randFrom(allTasks).id,
+  }));
+  updatePresenceBar();
+}
+
+function tickCollab() {
+  // Each user has 30% chance to move
+  collabState = collabState.map(c => {
+    if (Math.random() < 0.3) {
+      return { ...c, taskId: randFrom(allTasks).id };
+    }
+    return c;
+  });
+  updatePresenceBar();
+  if (currentView === 'kanban') renderKanban();
+}
+
+function updatePresenceBar() {
+  const avatarsEl = document.getElementById('presence-avatars');
+  const countEl   = document.getElementById('presence-count');
+  avatarsEl.innerHTML = collabState.map(c =>
+    `<div class="presence-avatar" style="background:${c.color}33;color:${c.color}" title="${c.name} is viewing">${c.initials}</div>`
+  ).join('');
+  countEl.textContent = `${collabState.length} viewing`;
+}
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ════════════════════════════════════════════
+// BACK NAVIGATION SUPPORT
+// ════════════════════════════════════════════
+try {
+  window.addEventListener('popstate', () => {
+    readURLFilters();
+    syncFilterUI();
+    applyFilters();
+    switchView(currentView);
+  });
+} catch(e) { /* sandboxed iframe — skip */ }
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+function init() {
+  buildAssigneeChips();
+  readURLFilters();
+  syncFilterUI();
+  document.getElementById('filter-from').value = filters.from;
+  document.getElementById('filter-to').value   = filters.to;
+  filteredTasks = allTasks.filter(t => {
+    if (filters.status.size   && !filters.status.has(t.status))     return false;
+    if (filters.priority.size && !filters.priority.has(t.priority)) return false;
+    if (filters.assignee.size && !filters.assignee.has(t.assigneeId)) return false;
+    if (filters.from && t.dueDate < filters.from) return false;
+    if (filters.to   && t.dueDate > filters.to)   return false;
+    return true;
+  });
+  initCollab();
+  switchView(currentView);
+  // Collab tick every 3.5s
+  setInterval(tickCollab, 3500);
+}
+
+init();
+</script>
+</body>
+</html>
